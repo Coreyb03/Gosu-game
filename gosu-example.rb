@@ -12,6 +12,8 @@ class Tutorial < Gosu::Window
 
     @star_anim = Gosu::Image.load_tiles("media/star.png",25,25)
     @stars = Array.new
+
+    @font = Gosu::Font.new(20)
   end
   
   def update
@@ -26,6 +28,11 @@ class Tutorial < Gosu::Window
     if Gosu.button_down? Gosu::KB_UP or Gosu::button_down? Gosu::GP_BUTTON_0
         @player.accelerate
     end
+
+    if Gosu.button_down? Gosu::KB_MINUS
+        @player.birb
+    end
+
     @player.move
     @player.collect_stars(@stars)
 
@@ -38,6 +45,7 @@ class Tutorial < Gosu::Window
     @player.draw
     @background_image.draw(0,0,ZOrder::BACKGROUND)
     @stars.each { |star| star.draw}
+    @font.draw("Score: #{@player.score}",10,10,ZOrder::UI, 1.0, 1.0, Gosu::Color::YELLOW)
   end
 
     def button_down(id)
@@ -55,14 +63,24 @@ module ZOrder
 end
 
 class Player
+    attr_reader :score
+
     def initialize
         @image = Gosu::Image.new("media/starfighter.bmp")
+        @beep = Gosu::Sample.new("media/beep.wav")
         @x = @y = @vel_x = @vel_y = @angle = 0.0
         @score = 0
     end
 
     def warp(x,y)
         @x , @y = x, y
+    end
+
+    def birb
+        @image = Gosu::Image.new("media/birb.png")
+        @draw
+        if @image = Gosu::Image.new("media/birb.png")
+        end
     end
 
     def turn_left 
@@ -97,7 +115,15 @@ class Player
     end
 
     def collect_stars(stars)
-        stars.reject! { |star| Gosu.distance(@x, @y, star.x, star.y)< 35}
+        stars.reject! do |star| 
+            if Gosu.distance(@x, @y, star.x, star.y)< 35
+                @score += 10
+                @beep.play
+                true
+            else
+                false
+            end
+        end
     end
 end
 
