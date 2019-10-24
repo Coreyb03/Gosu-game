@@ -13,7 +13,9 @@ class Tutorial < Gosu::Window
     @star_anim = Gosu::Image.load_tiles("media/star.png",25,25)
     @stars = Array.new
 
+    @laser = Laser.new
     @font = Gosu::Font.new(20)
+    @font = Gosu::Font.new(30)
   end
   
   def update
@@ -33,19 +35,24 @@ class Tutorial < Gosu::Window
         @player.birb
     end
 
+    if @player.score % 100 == 0&&@player.score > 0
+        @laser.warp(-400)
+    end
+    @laser.shoot
     @player.move
     @player.collect_stars(@stars)
 
-    if rand(100) < 4 and @stars.size < 25
+    if rand(100) < 6 and @stars.size < 25
         @stars.push(Star.new(@star_anim))
-      end
-  end
+    end
+end
   
   def draw
     @player.draw
     @background_image.draw(0,0,ZOrder::BACKGROUND)
     @stars.each { |star| star.draw}
     @font.draw("Score: #{@player.score}",10,10,ZOrder::UI, 1.0, 1.0, Gosu::Color::YELLOW)
+    @laser.draw
   end
 
     def button_down(id)
@@ -72,15 +79,16 @@ class Player
         @score = 0
     end
 
+    def scorecheck
+        @image = Gosu::Image.new("media/bird.png")
+    end
+
     def warp(x,y)
         @x , @y = x, y
     end
 
     def birb
-        @image = Gosu::Image.new("media/birb.png")
-        @draw
-        if @image = Gosu::Image.new("media/birb.png")
-        end
+        @image = Gosu::Image.new("media/bird.png")
     end
 
     def turn_left 
@@ -113,10 +121,10 @@ class Player
     def score 
         @score
     end
-
     def collect_stars(stars)
+        playersize = @image.width
         stars.reject! do |star| 
-            if Gosu.distance(@x, @y, star.x, star.y)< 35
+            if Gosu.distance(@x, @y, star.x, star.y)< playersize
                 @score += 10
                 @beep.play
                 true
@@ -144,6 +152,28 @@ class Star
         img = @animation[Gosu.milliseconds / 100 % @animation.size]
         img.draw(@x - img.width / 2.0, @y - img.height / 2.0,
             ZOrder::STARS, 1, 1, @color, :add)
+    end
+end
+
+class Laser
+
+    def initialize
+        @x = rand(0 - 640)
+        @y = 1000
+        @angle = 0
+        @laser = Gosu::Image.new("media/laser.jpg")
+    end
+
+    def draw
+        @laser.draw_rot(@x, @y, 1, @angle)
+    end
+
+    def warp(y)
+        @y = y
+    end
+
+    def shoot 
+        @y += 5
     end
 end
 
